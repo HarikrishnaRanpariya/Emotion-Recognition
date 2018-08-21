@@ -36,8 +36,8 @@ def loadData(FileName):
 #
 
 def extractArray(srcFile, dataType, dataset):
-	with open(srcFile, 'wb', lineterminator='\n') as datafile:
-		FData = csv.writer(datafile, quoting=csv.QUOTE_ALL)
+	with open(srcFile, 'wb') as datafile:
+		FData = csv.writer(datafile, quoting=csv.QUOTE_ALL, lineterminator='\n')
 		for trial in range(0, TRIAL):			
 			if dataType is "data":
 				for sample in range(0, SAMPLE):

@@ -164,8 +164,8 @@ def main():
 	batchSize = int(total_rows/(batchCnt*sampleCnt))
 	
 	#writing the final list to the file
-	with open(outputFilePath,"w", lineterminator='\n') as my_final_file:
-		writer = csv.writer(my_final_file)
+	with open(outputFilePath,"w") as my_final_file:
+		writer = csv.writer(my_final_file, lineterminator='\n')
 		writer.writerow(["Net Mean", "Median", "Max", "Min", "STD", "Variance", "Range", "Skweness", "Kurtosis"])
 		for batch_num in range(batchCnt*sampleCnt):
 			for col_num in range(total_cols):

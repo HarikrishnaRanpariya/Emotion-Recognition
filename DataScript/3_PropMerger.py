@@ -100,8 +100,8 @@ class PropMerger:
 	
 	def saveData(self, outputFile):
 		# Copy final data (self.FProp[Prop][sensor][batch]) into a .csv file
-		with open(outputFile,"w", lineterminator='\n') as my_final_file:
-			writer = csv.writer(my_final_file)
+		with open(outputFile,"w") as my_final_file:
+			writer = csv.writer(my_final_file, lineterminator='\n')
 			writer.writerow(["Batch1","Batch2","Batch3","Batch4","Batch5","Batch6","Batch7","TotalAvg"])
 			for sensor in range(self.sensorCnt):
 				for prop in range(self.propCnt):
