@@ -3,6 +3,8 @@ import cPickle
 import numpy as np
 import csv
 import sys
+import os
+import errno
 
 # Declare Global Constants
 TRIAL = 40
@@ -36,6 +38,14 @@ def loadData(FileName):
 #
 
 def extractArray(srcFile, dataType, dataset):
+	
+	if not os.path.exists(os.path.dirname(srcFile)):
+		try:
+			os.makedirs(os.path.dirname(srcFile))
+		except OSError as exc: # Guard against race condition
+			if exc.errno != errno.EEXIST:
+				raise
+	
 	with open(srcFile, 'wb') as datafile:
 		FData = csv.writer(datafile, quoting=csv.QUOTE_ALL, lineterminator='\n')
 		for trial in range(0, TRIAL):			
@@ -58,11 +68,12 @@ def extractArray(srcFile, dataType, dataset):
 # Main() start from here
 #
 def main():
+	
 	log("Load data of %s" %(sys.argv[1]))
 	dataset = loadData(sys.argv[1])
 	log("extract data array from %s" %(sys.argv[1]))
-	extractArray("data_%02d.csv" %(int(filter(str.isdigit, sys.argv[1]))), "data", dataset)
+	extractArray(".\data\data_%02d.csv" %(int(filter(str.isdigit, sys.argv[1]))), "data", dataset)
 	log("extract label array from %s" %(sys.argv[1]))
-	extractArray("label_%02d.csv" %(int(filter(str.isdigit, sys.argv[1]))), "label", dataset)
+	extractArray(".\label\label_%02d.csv" %(int(filter(str.isdigit, sys.argv[1]))), "label", dataset)
 
 main()
