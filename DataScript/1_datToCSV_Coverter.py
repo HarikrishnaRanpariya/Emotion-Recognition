@@ -12,7 +12,7 @@ ELEC = 40
 SAMPLE = 8064
 LABEL = 4
 DEBUG = False
-
+SENSORCNT=40
 # Define Global Macros
 dat = [TRIAL * SAMPLE *[ELEC*[0]]]
 label =  [TRIAL *[LABEL*[0]]]
@@ -24,7 +24,7 @@ label =  [TRIAL *[LABEL*[0]]]
 #
 def log(s):
     if DEBUG:
-        print s
+        print(s)
 
 #
 # Load datset from .dat file
@@ -38,7 +38,6 @@ def loadData(FileName):
 #
 
 def extractArray(srcFile, dataType, dataset):
-	
 	if not os.path.exists(os.path.dirname(srcFile)):
 		try:
 			os.makedirs(os.path.dirname(srcFile))
@@ -48,6 +47,15 @@ def extractArray(srcFile, dataType, dataset):
 	
 	with open(srcFile, 'wb') as datafile:
 		FData = csv.writer(datafile, quoting=csv.QUOTE_ALL, lineterminator='\n')
+		title=[]
+		if dataType is "data":
+			for sensor in range(SENSORCNT):
+				title.append("S%02d" %(sensor))
+			FData.writerow(title)
+		else:
+			title=["Valance", "Arousal", "Dominance", "Liking"]
+			FData.writerow(title)
+		
 		for trial in range(0, TRIAL):			
 			if dataType is "data":
 				for sample in range(0, SAMPLE):

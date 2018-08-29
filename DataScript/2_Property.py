@@ -34,16 +34,16 @@ class Property:
 		net_mean = 0
 		net_sum_list = []
 		
-		for outer_list in range((batchSize*batch_num), (batchSize*(batch_num+1))):
+		for outer_list in range((batchSize*batch_num+1), (batchSize*(batch_num+1)+1)):
 			net_sum = net_sum + float(file_list[outer_list][col_num])
 		net_mean = float(net_sum)/batchSize
 		return net_mean
 
 	def findMedian(self, file_list, batch_num, col_num, batchSize):
 		print("batchSize =%d" %batchSize)
-		mid_point = int(((batchSize*(batch_num+1))-(batchSize*batch_num))/2)#calculating the median
+		mid_point = int(((batchSize*(batch_num+1)+1)-(batchSize*batch_num+1))/2)#calculating the median
 		median = []
-		for outer_list in range((batchSize*batch_num), (batchSize*(batch_num+1))):
+		for outer_list in range((batchSize*batch_num+1), (batchSize*(batch_num+1)+1)):
 			#print("[%d] (%d)" %(outer_list, col_num))
 			median.append(float(file_list[outer_list][col_num]))
 		col_num +=1
@@ -169,7 +169,7 @@ def main():
 		writer.writerow(["Net Mean", "Median", "Max", "Min", "STD", "Variance", "Range", "Skweness", "Kurtosis"])
 		for batch_num in range(batchCnt*sampleCnt):
 			for col_num in range(total_cols):
-				print("Row from %d to %d" % (batch_num*batchSize, (batch_num+1)*batchSize-1))
+				print("Row from %d to %d" % (batchSize*batch_num+1, (batch_num+1)*batchSize))
 				print("Col %d" % (col_num))
 				final_calculated_values = prop.propExtraction(file_list, batch_num, col_num, batchSize)
 				writer.writerow(final_calculated_values)
