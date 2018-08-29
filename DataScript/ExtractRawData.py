@@ -13,9 +13,7 @@ def main():
 	
 	i=0
 	for fileName in f:
-		i += 1
-		if i >3:
-			break
+		
 		inputFile = inputfilePath+fileName
 		
 		datafile = (".\data\data_%s.csv" %(fileName.split('.')[0][1:3]))
