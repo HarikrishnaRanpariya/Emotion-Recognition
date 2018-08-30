@@ -89,16 +89,18 @@ class MultilayerPerceptron:
 		training_epochs = 25
 		init = tf.global_variables_initializer()
 		
-		with tf.Session() as sess:
+		config = tf.ConfigProto(device_count = {'GPU':0})
+		
+		with tf.Session(config = config) as sess:
 			sess.run(init)
 			
 			for epoch in range(training_epochs):
-				epoch_loss = 0
+				#epoch_loss = 0
 				#for i in range(0,31,8):
 				
 				_, c = sess.run([optimizer, cost], feed_dict={self.x:X_train, self.y:y_train})
-				epoch_loss += c
-				print('Epoch',epoch,'completed out of',training_epochs,'loss: ',epoch_loss)
+				#epoch_loss += c
+				print('Epoch',epoch,'completed out of',training_epochs,'loss: ',c)
 			
 			
 			correct = tf.equal(tf.argmax(prediction,1), tf.argmax(self.y,1))
@@ -125,7 +127,7 @@ def main():
 	
 	obj = MultilayerPerceptron(0.00001, 8,1,4000,500, 1000, 2880, 2)
 	prediction = obj.ModelGraph()
-	for Tindex in range(10, len(DataFile)):
+	for Tindex in range(len(DataFile)):
 		Flag=True
 		
 		MI_Outputfile = (".\MIOutput\output_%s.csv" %(DataFile[Tindex].split('.')[0][5:7]))
@@ -150,6 +152,7 @@ def main():
 						labelsList[i][j] = 1
 					else:
 						labelsList[i][j] = 0
+						
 			
 			if Tindex == index:
 				X_test=dataList
