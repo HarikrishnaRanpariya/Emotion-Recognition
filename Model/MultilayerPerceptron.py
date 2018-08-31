@@ -83,8 +83,10 @@ class MultilayerPerceptron:
 		
 		training_epochs = 25
 		init = tf.global_variables_initializer()
+		# issue : 4 Added a workaround in form of CPU use
+		config = tf.ConfigProto(device_count = {'GPU':0})
 		
-		with tf.Session() as sess:
+		with tf.Session(config = config) as sess:
 			sess.run(init)
 			
 			for epoch in range(training_epochs):
