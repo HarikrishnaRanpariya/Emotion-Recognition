@@ -1,139 +1,163 @@
-from __future__ import print_function
-
-#importing data
-
-import tensorflow as tf
-import pandas as pd
 from sklearn.model_selection import train_test_split
+from sklearn.metrics import accuracy_score
+from os import walk
+import matplotlib.pyplot as plt
+import matplotlib
+import tensorflow as tf
+import sklearn.datasets
+import sklearn
+import numpy as np
+import pandas as pd
+import sys
+import os
 
-#getting data from files
+class MultilayerPerceptron:
+	
+	def __init__(self, learning_rate, batch_size, display_step, n_hidden_1, n_hidden_2, n_hidden_3, n_input, n_classes):
+		#(0.00001, 8,1,4000,500, 1000, 2880, 2)
+		self.learning_rate = learning_rate
+		
+		self.batch_size = batch_size
+		self.display_step = display_step
+		
+		#network parameters
+		self.n_hidden_1 = n_hidden_1
+		self.n_hidden_2 = n_hidden_2
+		self.n_hidden_3 = n_hidden_3
+		self.n_input	= n_input
+		self.n_classes  = n_classes
+		self.weights = {
+			'h1' : tf.Variable(tf.random_normal([self.n_input, self.n_hidden_1])),
+			'h2' : tf.Variable(tf.random_normal([self.n_hidden_1, self.n_hidden_2])),
+			'h3' : tf.Variable(tf.random_normal([self.n_hidden_2, self.n_hidden_3])),
+			'out' : tf.Variable(tf.random_normal([self.n_hidden_3, self.n_classes])),
+		}
+		
+		self.biases = {
+			'b1' : tf.Variable(tf.random_normal([self.n_hidden_1])),
+			'b2' : tf.Variable(tf.random_normal([self.n_hidden_2])),
+			'b3' : tf.Variable(tf.random_normal([self.n_hidden_3])),
+			'out' : tf.Variable(tf.random_normal([self.n_classes])),
+		}
+	
+	#Store layers weight & bias
+	def ModelGraph(self):
+		
+		#create model
+		self.x = tf.placeholder("float", [None, self.n_input])
+		self.y = tf.placeholder("float", [None, self.n_classes])
+		
+		#hidden fully connected layer with 4000 neurons
+		layer_1 = tf.add(tf.matmul(self.x, self.weights['h1']), self.biases['b1'])
+		
+		#applying ReLu   & dropout
+		layer_1 = tf.nn.relu(layer_1)	
+		drop_out_layer_1 = tf.nn.dropout(layer_1, 0.25) 
+		
+		#hidden fully connected layer with 500 neurons
+		layer_2 = tf.add(tf.matmul(drop_out_layer_1, self.weights['h2']), self.biases['b2'])
+		
+		layer_2 = tf.nn.relu(layer_2)
+		drop_out_layer_2 = tf.nn.dropout(layer_2, 0.50)
+		
+		#hidden fully connected layer with 1000 neurons
+		layer_3 = tf.add(tf.matmul(drop_out_layer_2, self.weights['h3']), self.biases['b3'])
+		
+		layer_3 = tf.nn.relu(layer_3)
+		drop_out_layer_3 = tf.nn.dropout(layer_3, 0.50)
+		
+		#output layer with 2 classes
+		out_layer = tf.add(tf.matmul(drop_out_layer_3, self.weights['out']), self.biases['out'])
+		
+		#out_layer = tf.nn.softmax(out_layer)
+		drop__out_out_layer = tf.nn.dropout(out_layer, 0.50)
+		
+		return drop__out_out_layer
+	
+	#training_function
+	def train_model(self, prediction, X_train, X_test, y_train, y_test):
+		
+		cost = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(logits = prediction, labels = self.y))
+		optim = tf.train.AdamOptimizer(learning_rate = self.learning_rate)
+		optimizer = optim.minimize(cost)
+		
+		training_epochs = 25
+		init = tf.global_variables_initializer()
+		
+		with tf.Session() as sess:
+			sess.run(init)
+			
+			for epoch in range(training_epochs):
+				_, c = sess.run([optimizer, cost], feed_dict={self.x:X_train, self.y:y_train})
+				print('Epoch',epoch,'completed out of',training_epochs,'loss: ',c)
+			
+			correct = tf.equal(tf.argmax(prediction,1), tf.argmax(self.y,1))
+			
+			accuracy = tf.reduce_mean(tf.cast(correct,'float'))
+			print('Accuracy:', accuracy.eval({self.x:X_test, self.y: y_test}))
+			
+	
+def main():
+	Flag=True
+	DataFilePath = sys.argv[1]
+	LabelFilePath = sys.argv[2]
+	DataFile = []
+	for (dirpath, dirnames, filenames) in walk(DataFilePath):
+		filenames = [i for i in filenames if i.endswith('.csv')] 
+		DataFile.extend(filenames)
+		break
+	
+	LabelFile = []
+	for (dirpath, dirnames, filenames) in walk(LabelFilePath):
+		filenames = [i for i in filenames if i.endswith('.csv')] 
+		LabelFile.extend(filenames)
+		break
+	
+	obj = MultilayerPerceptron(0.00001, 8,1,4000,500, 1000, 2880, 2)
+	prediction = obj.ModelGraph()
+	for Tindex in range(len(DataFile)):
+		Flag=True
+		
+		MI_Outputfile = (".\MIOutput\output_%s.csv" %(DataFile[Tindex].split('.')[0][5:7]))
+		if not os.path.exists(os.path.dirname(MI_Outputfile)):
+			try:
+				os.makedirs(os.path.dirname(MI_Outputfile))
+			except OSError as exc: # Guard against race condition
+				if exc.errno != errno.EEXIST:
+					raise
+		
+		for index in range(len(DataFile)):
+			labelsList= [[0 for x in range(2)] for y in range(40)]
+			
+			data = pd.read_csv(DataFilePath+DataFile[index])
+			labels = pd.read_csv(LabelFilePath+LabelFile[index])
+			
+			dataList = data.values.tolist()
+			RawlabelsList = labels.values.tolist()
+			for i in range(len(RawlabelsList)):
+				for j in range(2):
+					if RawlabelsList[i][j] > 4:
+						labelsList[i][j] = 1
+					else:
+						labelsList[i][j] = 0
+						
+			
+			if Tindex == index:
+				X_test=dataList
+				Y_test=labelsList
+				print("--%s" %DataFile[Tindex])
+			else:
+				if Flag == True:
+					X_train = dataList
+					Y_train = labelsList
+					Flag=False
+				else:
+					X_train += dataList
+					Y_train += labelsList
+					#print("++")
+			del labelsList
+					
+					
+		obj.train_model(prediction, X_train, X_test, Y_train, Y_test)
 
-file_name = 'our_csv_file.csv'
-
-data = pd.read_csv(file_name)
-
-#labels would be ratings column
-y_labels = data.rating
-
-#others columns would be used as features 
-x_features = data.drop('rating', axis=1)
-
-#splitting dataset
-X_train, y_train, X_test, y_test = train_test_split(x_features, y_labels, test_size = 0.2)
-
-
-#parameters
-learning_rate = 0.00001
-training_epochs = 250
-batch_size = 101
-display_step = 1
-
-#network parameters
-n_hidden_1 = 4000
-n_hidden_2 = 500
-n_hidden_3 = 1000
-n_input    = 2960
-n_classes  = 2
-
-#tf Graph input
-X = tf.placeholder("float", [None, n_input])
-X = X_train
-Y = tf.placeholder("float", [None, n_classes])
-Y = y_train
-
-#Store layers weight & bias
-
-weights = {
-	'h1' : tf.Variable(tf.random_normal([n_input, n_hidden_1])),
-	'h2' : tf.Variable(tf.random_normal([n_hidden_1, n_hidden_2])),
-	'h3' : tf.Variable(tf.random_normal([n_hidden_2, n_hidden_3])),	
-	'out' : tf.Variable(tf.random_normal([n_hidden_3, n_classes])),
-}
-
-biases = {
-	'b1' : tf.Variable(tf.random_normal([n_hidden_1])),
-	'b2' : tf.Variable(tf.random_normal([n_hidden_2])),
-	'b3' : tf.Variable(tf.random_normal([n_hidden_3])),
-	'out' : tf.Variable(tf.random_normal([n_classes])),
-}
-
-#create model
-
-
-def multilayer_perceptron(x):
-    #hidden fully connected layer with 4000 neurons
-    layer_1 = tf.add(tf.matmul(x, weights['h1']), biases['b1'])
-    
-    #applying ReLu   & dropout
-    layer_1 = tf.nn.relu(layer_1)    
-    drop_out_layer_1 = tf.nn.dropout(layer_1, 0.25) 
-    
-    #hidden fully connected layer with 500 neurons
-    layer_2 = tf.add(tf.matmul(drop_out_layer_1, weights['h2']), biases['b2'])
-    
-    layer_2 = tf.nn.relu(layer_2)
-    drop_out_layer_2 = tf.nn.dropout(layer_2, 0.50)
-    
-    #hidden fully connected layer with 1000 neurons
-    layer_3 = tf.add(tf.matmul(drop_out_layer_2, weights['h3']), biases['b3'])
-    
-    layer_3 = tf.nn.relu(layer_3)
-    drop_out_layer_3 = tf.nn.dropout(layer_3, 0.50)
-    
-    
-    #output layer with 2 classes
-    out_layer = tf.add(tf.matmul(drop_out_layer_3, weights['out']), biases['out'])
-    
-    #out_layer = tf.nn.softmax(out_layer)
-    drop__out_out_layer = tf.nn.dropout(out_layer, 0.50)
-    
-    return drop__out_out_layer
-
-    
-#construct model
-logits = multilayer_perceptron(X)
-
-#define loss and optimizer
-loss_op = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(logits = logits, labels=Y))
-optimizer = tf.train.AdamOptimizer(learning_rate = learning_rate)
-train_op = optimizer.minimize(loss_op)
-
-#initializing the variables
-init = tf.global_variables_initializer()
-
-with tf.Session() as sess:
-    sess.run(init)
-    
-    #Training cycle
-    for epoch in range(training_epochs):
-        avg_cost = 0.
-        total_batch = 7
-        
-        #loop over all batches
-        for i in range(total_batch):
-            batch_x = X_train/batch_size
-            batch_y = y_train/batch_size
-            
-            #Run optimization op(backprop) and cost op (to get loss value)
-            
-            _, c = sess.run([train_op, loss_op], feed_dict={X:batch_x, Y:batch_y})
-            
-            #computing average loss
-            avg_cost += c/total_batch
-        
-        #Display logs per epoch step
-        if epoch % display_step == 0:
-            print("Epoch:", '%04d' %(epoch+1), "cost={:.9f}".format(avg_cost))
-            
-    print("Optimization Finished!")
-    
-    #TESTING TIME
-    pred = tf.nn.softmax(logits)
-    correct_prediction = tf.equal(tf.argmax(pred,1), tf.argmax(Y,1))
-    
-    #CALCULATE ACCURACY
-    accuracy = tf.reduce_mean(tf.cast(correct_prediction,"float"))
-    print("Accuracy is :" %accuracy)
-    
-    
-    
+main()
